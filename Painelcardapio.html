@@ -1,0 +1,203 @@
+<html><head><base href="https://websimcreationengine.com/cardapio-online-painel/admin.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo - Cardápio Online</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+  }
+  .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    overflow: hidden;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 5px;
+  }
+  h1, h2 {
+    color: #333;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background-color: #f2f2f2;
+  }
+  input[type="text"], input[type="number"], input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  .delete-btn {
+    background-color: #f44336;
+  }
+  .delete-btn:hover {
+    background-color: #d32f2f;
+  }
+  #addItemForm {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+  }
+  .item-image {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: cover;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Painel Administrativo - Cardápio Online</h1>
+    
+    <table id="menuTable">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Preço</th>
+          <th>Imagem</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Menu items will be dynamically added here -->
+      </tbody>
+    </table>
+
+    <div id="addItemForm">
+      <h2>Adicionar Novo Item</h2>
+      <input type="text" id="newItemName" placeholder="Nome do item" required>
+      <input type="number" id="newItemPrice" placeholder="Preço" step="0.01" required>
+      <input type="file" id="newItemImage" accept="image/*" required>
+      <button id="addItemBtn">Adicionar Item</button>
+    </div>
+  </div>
+
+  <script>
+    let menuItems = JSON.parse(localStorage.getItem('menuItems')) || [
+      { name: "X-Burger", price: 15.00, image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==" },
+      { name: "X-Salada", price: 17.00, image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==" },
+      { name: "X-Bacon", price: 18.00, image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==" },
+      { name: "Batata Frita", price: 8.00, image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==" },
+      { name: "Refrigerante", price: 5.00, image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==" }
+    ];
+
+    const menuTable = document.getElementById('menuTable');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const newItemName = document.getElementById('newItemName');
+    const newItemPrice = document.getElementById('newItemPrice');
+    const newItemImage = document.getElementById('newItemImage');
+
+    function renderMenu() {
+      const tbody = menuTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      menuItems.forEach((item, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td><input type="text" value="${item.name}" data-index="${index}" data-field="name"></td>
+          <td><input type="number" value="${item.price.toFixed(2)}" step="0.01" data-index="${index}" data-field="price"></td>
+          <td>
+            <img src="${item.image}" alt="${item.name}" class="item-image">
+            <input type="file" accept="image/*" data-index="${index}" data-field="image">
+          </td>
+          <td>
+            <button class="delete-btn" data-index="${index}">Excluir</button>
+          </td>
+        `;
+      });
+    }
+
+    function updateLocalStorage() {
+      localStorage.setItem('menuItems', JSON.stringify(menuItems));
+    }
+
+    // Initial render
+    renderMenu();
+
+    // Event listeners
+    menuTable.addEventListener('input', (e) => {
+      if (e.target.tagName === 'INPUT') {
+        const index = e.target.dataset.index;
+        const field = e.target.dataset.field;
+        if (field === 'image') {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              menuItems[index][field] = event.target.result;
+              updateLocalStorage();
+              renderMenu();
+            };
+            reader.readAsDataURL(file);
+          }
+        } else {
+          const value = field === 'price' ? parseFloat(e.target.value) : e.target.value;
+          menuItems[index][field] = value;
+          updateLocalStorage();
+        }
+      }
+    });
+
+    menuTable.addEventListener('click', (e) => {
+      if (e.target.classList.contains('delete-btn')) {
+        const index = e.target.dataset.index;
+        menuItems.splice(index, 1);
+        updateLocalStorage();
+        renderMenu();
+      }
+    });
+
+    addItemBtn.addEventListener('click', () => {
+      const name = newItemName.value.trim();
+      const price = parseFloat(newItemPrice.value);
+      const imageFile = newItemImage.files[0];
+
+      if (name && !isNaN(price) && imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          menuItems.push({ name, price, image: event.target.result });
+          updateLocalStorage();
+          renderMenu();
+          newItemName.value = '';
+          newItemPrice.value = '';
+          newItemImage.value = '';
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        alert('Por favor, preencha todos os campos corretamente.');
+      }
+    });
+  </script>
+</body>
+</html>
